@@ -1,5 +1,5 @@
-import 'package:camera_tests/ui/screens/camera/camera_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:camera_tests/ui/screens/camera/camera_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -20,11 +20,11 @@ class HomeScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => _cameraScreen(context),
-            child: Text('Camera + Photo Gallery'),
+            child: Text('Camera + Face Recognition'),
           ),
           TextButton(
             onPressed: () => _cameraScreen(context),
-            child: Text('Camera + Face Recognition'),
+            child: Text('Camera + Photo Gallery'),
           ),
         ],
       ),

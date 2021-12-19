@@ -1,3 +1,4 @@
+import 'package:camera_tests/ui/screens/camera/camera_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 
@@ -13,6 +14,7 @@ class Body extends StatefulWidget {
 class _BodyState extends State<Body> {
 
   CameraController? _cameraController;
+  CameraLensDirection _cameraLensDirection = CameraLensDirection.back;
 
   @override
   initState() {
@@ -28,19 +30,38 @@ class _BodyState extends State<Body> {
       );
     } else {
       return Camera(
-        cameraController: _cameraController!
+        cameraController: _cameraController!,
+        switchDirection: _switchDirection,
       );
     }
     
   }
 
   _initCameraController() async {
+    _cameraController = null;
     List<CameraDescription> cameras = await availableCameras();
-    CameraController controller = CameraController(cameras[1], ResolutionPreset.medium);
+    CameraDescription descr = cameras.firstWhere(
+      (descr) => descr.lensDirection == _cameraLensDirection
+    );
+    
+    CameraController controller = CameraController(
+      descr,
+      ResolutionPreset.medium,
+    );
+    
     await controller.initialize();
     setState(() {
       _cameraController = controller;
     });
+  }
+
+  void _switchDirection() {
+    if (_cameraLensDirection == CameraLensDirection.front) {
+      _cameraLensDirection = CameraLensDirection.back;
+    } else {
+      _cameraLensDirection = CameraLensDirection.front;
+    }
+    _initCameraController();
   }
 
 }
