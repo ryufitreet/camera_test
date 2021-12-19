@@ -1,5 +1,7 @@
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+
+import 'camera.dart';
 
 class Body extends StatefulWidget {
   const Body({Key? key}) : super(key: key);
@@ -25,8 +27,8 @@ class _BodyState extends State<Body> {
         child: CircularProgressIndicator(),
       );
     } else {
-      return Center(
-        child: Text('Camera'),
+      return Camera(
+        cameraController: _cameraController!
       );
     }
     
@@ -34,7 +36,7 @@ class _BodyState extends State<Body> {
 
   _initCameraController() async {
     List<CameraDescription> cameras = await availableCameras();
-    CameraController controller = CameraController(cameras[0], ResolutionPreset.medium);
+    CameraController controller = CameraController(cameras[1], ResolutionPreset.medium);
     await controller.initialize();
     setState(() {
       _cameraController = controller;

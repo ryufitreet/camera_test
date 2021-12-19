@@ -12,10 +12,19 @@ class HomeScreen extends StatelessWidget {
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextButton(
             onPressed: () => _cameraScreen(context),
             child: Text('Camera'),
+          ),
+          TextButton(
+            onPressed: () => _cameraScreen(context),
+            child: Text('Camera + Photo Gallery'),
+          ),
+          TextButton(
+            onPressed: () => _cameraScreen(context),
+            child: Text('Camera + Face Recognition'),
           ),
         ],
       ),
