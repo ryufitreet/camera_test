@@ -14,15 +14,7 @@ class Camera extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        CameraPreview(cameraController!),
-        TextButton(
-          onPressed: switchDirection,
-          child: Text('Switch camera'),
-        ),
-      ],
-    );
+    return CameraPreview(cameraController!);
   }
 }
 

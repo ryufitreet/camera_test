@@ -1,4 +1,3 @@
-import 'package:camera_tests/ui/screens/camera/camera_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 
@@ -23,15 +22,34 @@ class _BodyState extends State<Body> {
   }
 
   @override
+  void dispose() {
+    _cameraController!.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (_cameraController == null) {
       return Center(
         child: CircularProgressIndicator(),
       );
     } else {
-      return Camera(
-        cameraController: _cameraController!,
-        switchDirection: _switchDirection,
+      return Column(
+        children: [
+          Camera(
+            cameraController: _cameraController!,
+            switchDirection: _switchDirection,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              TextButton(
+                onPressed: _switchDirection,
+                child: Text('Switch camera'),
+              ),
+            ],
+          ),
+        ],
       );
     }
     
@@ -48,8 +66,9 @@ class _BodyState extends State<Body> {
       descr,
       ResolutionPreset.medium,
     );
-    
+
     await controller.initialize();
+    
     setState(() {
       _cameraController = controller;
     });
