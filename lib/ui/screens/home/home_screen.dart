@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:camera_tests/ui/screens/camera/camera_screen.dart';
+
+import '../camera/camera_screen.dart';
+import '../face_recognition/face_recognition_screen.dart';
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -15,16 +18,12 @@ class HomeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextButton(
-            onPressed: () => _cameraScreen(context),
-            child: Text('Camera'),
-          ),
-          TextButton(
-            onPressed: () => _cameraScreen(context),
+            onPressed: () => _faceRecognitionScreen(context),
             child: Text('Camera + Face Recognition'),
           ),
           TextButton(
             onPressed: () => _cameraScreen(context),
-            child: Text('Camera + Photo Gallery'),
+            child: Text('Camera and Gallery'),
           ),
         ],
       ),
@@ -34,6 +33,12 @@ class HomeScreen extends StatelessWidget {
   _cameraScreen(BuildContext context) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => CameraScreen(),
+    ));
+  }
+
+  _faceRecognitionScreen(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => FaceRecognitionScreen(),
     ));
   }
 
