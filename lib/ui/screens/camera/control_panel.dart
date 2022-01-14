@@ -15,7 +15,8 @@ class ControlPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     CameraScreenModel model = CameraScreenModel.of(context);
 
-    return Container(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       padding: EdgeInsets.all(16),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,

@@ -53,8 +53,6 @@ class CameraScreenModel extends ChangeNotifier {
     XFile photo = await cameraController!.takePicture();
     
     Directory photosDir = await getPhotosDir();
-    
-    if (!(await photosDir.exists())) photosDir.create(recursive: true);
     photo.saveTo('${photosDir.path}/${photo.name}');
   }
 

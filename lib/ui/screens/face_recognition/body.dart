@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:camera_tests/ui/screens/photo/photo_screen.dart';
+import 'package:camera_tests/utils/files.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:camera/camera.dart';
@@ -19,7 +23,6 @@ class _BodyState extends State<Body> {
   FaceDetector? _faceDetector;
   bool _faceProcessing = false;
 
-
   @override
   void initState() {
     super.initState();
@@ -34,10 +37,7 @@ class _BodyState extends State<Body> {
   }
 
   _printModelManager() async {
-    print("_printModelManager");
     RemoteModelManager remoteModelManager = GoogleMlKit.vision.remoteModelManager();
-    print(await remoteModelManager.isModelDownloaded('face'));
-    print(await remoteModelManager.isModelDownloaded('vision'));
   }
 
   @override
@@ -57,7 +57,19 @@ class _BodyState extends State<Body> {
     } else {
       return Column(
         children: [
-          Center(child: CameraPreview(_cameraController!))
+          Center(child: CameraPreview(_cameraController!)),
+          Container(
+            padding: EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: _takePicture,
+                  child: Text('Take picture'),
+                ),
+              ],
+            ),
+          ),
         ],
       );
     }
@@ -77,16 +89,17 @@ class _BodyState extends State<Body> {
 
 
 
-    Future.delayed(Duration(seconds: 3), () {
-      controller.startImageStream((CameraImage cameraImage) async {
-        if (_faceProcessing) return;
-        _faceProcessing = true;
-        InputImage inputImage = _getMlKitInputImageFromCameraImage(cameraImage);
-        final List<Face> faces = await _faceDetector!.processImage(inputImage);
-        print("faces:::::::::::::::::::::::::::::::::::: $faces");
-        _faceProcessing = false;
-      });
-    });
+    // Future.delayed(Duration(seconds: 3), () {
+    //   controller.startImageStream((CameraImage cameraImage) async {
+    //     if (_faceProcessing) return;
+    //     _faceProcessing = true;
+    //     InputImage inputImage = _getMlKitInputImageFromCameraImage(cameraImage);
+        
+    //     final List<Face> faces = await _faceDetector!.processImage(inputImage);
+    //     print("faces:::::::::::::::::::::::::::::::::::: $faces");
+    //     _faceProcessing = false;
+    //   });
+    // });
 
 
     setState(() {
@@ -94,70 +107,84 @@ class _BodyState extends State<Body> {
     });
   }
 
-  InputImage _getMlKitInputImageFromCameraImage(CameraImage cameraImage) {
-    print("_getMlKitInputImageFromCameraImage");
-    // Создаем буффер 
-    // Write-only buffer for incrementally building a ByteData instance.
-    // Окей создаем облать, куда будем записывать байты
-    final WriteBuffer allBytes = WriteBuffer();
-    // Почему planes засовываются в буффер один за другим?
-    // Когда там по идее каждый байт из плейна описывает один пиксель. 
-    // Ладно, может быть просто ml_kit готов к этому и потом распарсит их
-    // взависимости от размера
-    for (Plane plane in cameraImage.planes) {
-      allBytes.putUint8List(plane.bytes);
-    }
-    // Собрали значит все плейны в одну пачку байтов.
-    final Uint8List bytes = allBytes.done().buffer.asUint8List();
-    print("bytesLength ${bytes.length}");
-    // Понятно
-    final Size imageSize = Size(
-      cameraImage.width.toDouble(),
-      cameraImage.height.toDouble()
-    );
-    print('imageSize $imageSize');
-    // Тоже вроде понятно
-    final InputImageRotation imageRotation = 
-      InputImageRotationMethods.fromRawValue(_camera!.sensorOrientation) ??
-      InputImageRotation.Rotation_0deg;
-    print("InputImageRotation ${_camera!.sensorOrientation} ${InputImageRotationMethods.fromRawValue(_camera!.sensorOrientation)}");
-    print('ImageFormatRaw ${cameraImage.format.raw} ${InputImageFormatMethods.fromRawValue(cameraImage.format.raw)}');
-    // Тоже вроде понятно, но с format.raw могут быть сложности.
-    // Так как на Андроиде это инт а на иос что-то еще
-    final InputImageFormat inputImageFormat = 
-      InputImageFormatMethods.fromRawValue(cameraImage.format.raw) ??
-        InputImageFormat.BGRA8888;
-    // Собираем из каждого Plane основные данные
-    final List<InputImagePlaneMetadata> planeData = cameraImage.planes.map<InputImagePlaneMetadata>(
-      (Plane plane) => InputImagePlaneMetadata(
-        bytesPerRow: plane.bytesPerRow,
-        height: cameraImage.width,
-        width: cameraImage.height,
+  _takePicture() async {
+    XFile photo = await _cameraController!.takePicture();
+    Directory photosDir = await getPhotosDir();
+    String photoPath = '${photosDir.path}/${photo.name}';
+    photo.saveTo(photoPath);
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (c) => PhotoScreen(photoFile: File(photoPath)),
       )
-    ).toList();
-    planeData.forEach((pd) {
-      print("PlaneData $pd pd w:${pd.width} h:${pd.height}");
-    });
-    // Собираем все данные для составления картинки
-    final InputImageData inputImageData = InputImageData(
-      size: imageSize,
-      imageRotation: imageRotation,
-      inputImageFormat: inputImageFormat,
-      planeData: planeData,
     );
-    print("InputImageData:::::::::::::::: ${inputImageData.getMetaData()}");
-    // Собираем картинку для обратки MLKIT
-    final InputImage inputImage = InputImage.fromBytes(
-      bytes: bytes,
-      inputImageData: inputImageData
-    );
-    // ни че го непонятно
-    // Окей, это как-то работает
-    /* 06.01.22 нихуя не понятно. Ничего не работает. Сначала сделаю галерею.
-      Разберусь как загружать\сохранять показывать фотки. Потом вернусь сюда.
-      Хотя бы можно будет как-то отдебажить.
-    */
-    return inputImage;
   }
+
+  // InputImage _getMlKitInputImageFromCameraImage(CameraImage cameraImage) {
+  //   print("_getMlKitInputImageFromCameraImage");
+  //   // Создаем буффер 
+  //   // Write-only buffer for incrementally building a ByteData instance.
+  //   // Окей создаем облать, куда будем записывать байты
+  //   final WriteBuffer allBytes = WriteBuffer();
+  //   // Почему planes засовываются в буффер один за другим?
+  //   // Когда там по идее каждый байт из плейна описывает один пиксель. 
+  //   // Ладно, может быть просто ml_kit готов к этому и потом распарсит их
+  //   // взависимости от размера
+  //   for (Plane plane in cameraImage.planes) {
+  //     allBytes.putUint8List(plane.bytes);
+  //   }
+  //   // Собрали значит все плейны в одну пачку байтов.
+  //   final Uint8List bytes = allBytes.done().buffer.asUint8List();
+  //   print("bytesLength ${bytes.length}");
+  //   // Понятно
+  //   final Size imageSize = Size(
+  //     cameraImage.width.toDouble(),
+  //     cameraImage.height.toDouble()
+  //   );
+  //   print('imageSize $imageSize');
+  //   // Тоже вроде понятно
+  //   final InputImageRotation imageRotation = 
+  //     InputImageRotationMethods.fromRawValue(_camera!.sensorOrientation) ??
+  //     InputImageRotation.Rotation_0deg;
+  //   print("InputImageRotation ${_camera!.sensorOrientation} ${InputImageRotationMethods.fromRawValue(_camera!.sensorOrientation)}");
+  //   print('ImageFormatRaw ${cameraImage.format.raw} ${InputImageFormatMethods.fromRawValue(cameraImage.format.raw)}');
+  //   // Тоже вроде понятно, но с format.raw могут быть сложности.
+  //   // Так как на Андроиде это инт а на иос что-то еще
+  //   final InputImageFormat inputImageFormat = 
+  //     InputImageFormatMethods.fromRawValue(cameraImage.format.raw) ??
+  //       InputImageFormat.BGRA8888;
+  //   // Собираем из каждого Plane основные данные
+  //   final List<InputImagePlaneMetadata> planeData = cameraImage.planes.map<InputImagePlaneMetadata>(
+  //     (Plane plane) => InputImagePlaneMetadata(
+  //       bytesPerRow: plane.bytesPerRow,
+  //       height: cameraImage.width,
+  //       width: cameraImage.height,
+  //     )
+  //   ).toList();
+  //   planeData.forEach((pd) {
+  //     print("PlaneData $pd pd w:${pd.width} h:${pd.height}");
+  //   });
+  //   // Собираем все данные для составления картинки
+  //   final InputImageData inputImageData = InputImageData(
+  //     size: imageSize,
+  //     imageRotation: imageRotation,
+  //     inputImageFormat: inputImageFormat,
+  //     planeData: planeData,
+  //   );
+  //   print("InputImageData:::::::::::::::: ${inputImageData.getMetaData()}");
+
+  //   // Собираем картинку для обратки MLKIT
+  //   final InputImage inputImage = InputImage.fromBytes(
+  //     bytes: bytes,
+  //     inputImageData: inputImageData
+  //   );
+  //   // ни че го непонятно
+  //   // Окей, это как-то работает
+  //   /* 06.01.22 нихуя не понятно. Ничего не работает. Сначала сделаю галерею.
+  //     Разберусь как загружать\сохранять показывать фотки. Потом вернусь сюда.
+  //     Хотя бы можно будет как-то отдебажить.
+  //   */
+  //   return inputImage;
+  // }
 
 }
